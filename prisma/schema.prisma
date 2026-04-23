@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  githubId      Int       @unique
+  username      String    @unique
+  name          String?
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  gitStats      GitStats?
+  farm          Farm?
+}
+
+model GitStats {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+
+  totalCommits    Int      @default(0)
+  totalRepos      Int      @default(0)
+  totalStars      Int      @default(0)
+  totalFollowers  Int      @default(0)
+  totalFollowing  Int      @default(0)
+  streak          Int      @default(0)
+  languages       Json     @default("{}")
+  punchCard       Json     @default("[]")
+
+  dailyEnergy     Int      @default(0)
+  energyUsedToday Int      @default(0)
+  lastEnergyReset DateTime @default(now())
+  lastSyncAt      DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Farm {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+
+  gridSizeX   Int      @default(10)
+  gridSizeY   Int      @default(10)
+  biome       Json     @default("{}")
+  balance     Float    @default(0)
+
+  tiles       Tile[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tile {
+  id        String   @id @default(cuid())
+  farmId    String
+  farm      Farm     @relation(fields: [farmId], references: [id])
+
+  posX      Int
+  posY      Int
+  type      String   @default("EMPTY")
+  data      Json     @default("{}")
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([farmId, posX, posY])
+}
