@@ -14,8 +14,9 @@ const FarmCanvas = dynamic(() => import('./FarmCanvas'), {
 interface FarmWrapperProps {
   gridSizeX: number
   gridSizeY: number
+  biome: Record<string, number>
 }
 
-export default function FarmWrapper({ gridSizeX, gridSizeY }: FarmWrapperProps) {
-  return <FarmCanvas gridSizeX={gridSizeX} gridSizeY={gridSizeY} />
+export default function FarmWrapper({ gridSizeX, gridSizeY, biome }: FarmWrapperProps) {
+  return <FarmCanvas gridSizeX={gridSizeX} gridSizeY={gridSizeY} biome={biome} />
 }

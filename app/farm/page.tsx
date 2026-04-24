@@ -95,6 +95,7 @@ export default async function FarmPage() {
         <FarmWrapper
           gridSizeX={farm?.gridSizeX ?? 10}
           gridSizeY={farm?.gridSizeY ?? 10}
+          biome={(farm?.biome as Record<string, number>) ?? {}}
         />
       </div>
 
