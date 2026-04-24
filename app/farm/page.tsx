@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getGitHubData } from '@/lib/github'
+import FarmWrapper from '@/components/farm/FarmWrapper'
 
 function calculateGridSize(totalRepos: number): number {
   if (totalRepos <= 2) return 10
@@ -87,36 +88,39 @@ export default async function FarmPage() {
   const stats = await prisma.gitStats.findUnique({ where: { userId: user.id } })
 
   return (
-    <main className="min-h-screen bg-[#1a1a2e] flex flex-col items-center justify-center">
-      <div className="text-center space-y-4 max-w-2xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-[#e8c97a]">
-          Bem vindo, {user.username}!
-        </h1>
-        <div className="grid grid-cols-3 gap-4 mt-6">
-          <div className="bg-[#0d0d1a] p-4 rounded-xl">
-            <p className="text-[#a0a0b0] text-sm">Terreno</p>
-            <p className="text-[#e8c97a] text-2xl font-bold">{farm?.gridSizeX}x{farm?.gridSizeY}</p>
-          </div>
-          <div className="bg-[#0d0d1a] p-4 rounded-xl">
-            <p className="text-[#a0a0b0] text-sm">Energia</p>
-            <p className="text-[#e8c97a] text-2xl font-bold">{stats?.dailyEnergy}</p>
-          </div>
-          <div className="bg-[#0d0d1a] p-4 rounded-xl">
-            <p className="text-[#a0a0b0] text-sm">Streak</p>
-            <p className="text-[#e8c97a] text-2xl font-bold">{stats?.streak} dias</p>
-          </div>
+    <main className="w-screen h-screen bg-[#1a1a2e] relative overflow-hidden">
+
+      {/* Grid 3D */}
+      <div className="absolute inset-0">
+        <FarmWrapper
+          gridSizeX={farm?.gridSizeX ?? 10}
+          gridSizeY={farm?.gridSizeY ?? 10}
+        />
+      </div>
+
+      {/* HUD */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
+        <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2">
+          <p className="text-[#e8c97a] font-bold text-lg">{user.username}</p>
+          <p className="text-[#a0a0b0] text-sm">{farm?.gridSizeX}x{farm?.gridSizeY} tiles</p>
         </div>
-        <div className="bg-[#0d0d1a] p-4 rounded-xl mt-4">
-          <p className="text-[#a0a0b0] text-sm mb-2">Bioma</p>
-          <div className="flex gap-2 justify-center flex-wrap">
-            {stats && Object.entries(stats.languages as Record<string, number>).map(([lang]) => (
-              <span key={lang} className="bg-[#2d6a4f] text-white text-sm px-3 py-1 rounded-full">
-                {lang}
-              </span>
-            ))}
+
+        <div className="flex gap-3">
+          <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
+            <p className="text-[#a0a0b0] text-xs">Energia</p>
+            <p className="text-[#e8c97a] font-bold">{stats?.dailyEnergy ?? 0}</p>
+          </div>
+          <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
+            <p className="text-[#a0a0b0] text-xs">Streak</p>
+            <p className="text-[#e8c97a] font-bold">{stats?.streak ?? 0} dias</p>
+          </div>
+          <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
+            <p className="text-[#a0a0b0] text-xs">G$</p>
+            <p className="text-[#e8c97a] font-bold">{farm?.balance ?? 0}</p>
           </div>
         </div>
       </div>
+
     </main>
   )
 }
