@@ -2,12 +2,8 @@
 
 import { useFarmStore } from '@/store/farmStore'
 
-interface TileMenuProps {
-  energy: number
-}
-
-export default function TileMenu({ energy }: TileMenuProps) {
-  const { selectedTile, clearSelection, setTileType, tiles, useEnergy } = useFarmStore()
+export default function TileMenu() {
+  const { selectedTile, clearSelection, setTileType, tiles } = useFarmStore()
 
   if (!selectedTile) return null
 
@@ -18,46 +14,34 @@ export default function TileMenu({ energy }: TileMenuProps) {
     EMPTY: [
       {
         label: '⛏ Preparar Solo',
-        cost: 2,
         action: () => {
-          if (useEnergy(2)) {
-            setTileType(selectedTile.x, selectedTile.z, 'PREPARED')
-            clearSelection()
-          }
+          setTileType(selectedTile.x, selectedTile.z, 'PREPARED')
+          clearSelection()
         },
       },
       {
         label: '💧 Criar Lago',
-        cost: 5,
         action: () => {
-          if (useEnergy(5)) {
-            setTileType(selectedTile.x, selectedTile.z, 'WATER')
-            clearSelection()
-          }
+          setTileType(selectedTile.x, selectedTile.z, 'WATER')
+          clearSelection()
         },
       },
     ],
     PREPARED: [
       {
         label: '🌱 Plantar Trigo',
-        cost: 3,
         action: () => {
-          if (useEnergy(3)) {
-            setTileType(selectedTile.x, selectedTile.z, 'PLANTED')
-            clearSelection()
-          }
+          setTileType(selectedTile.x, selectedTile.z, 'PLANTED')
+          clearSelection()
         },
       },
     ],
     PLANTED: [
       {
         label: '🌾 Colher',
-        cost: 1,
         action: () => {
-          if (useEnergy(1)) {
-            setTileType(selectedTile.x, selectedTile.z, 'EMPTY')
-            clearSelection()
-          }
+          setTileType(selectedTile.x, selectedTile.z, 'EMPTY')
+          clearSelection()
         },
       },
     ],
@@ -70,7 +54,6 @@ export default function TileMenu({ energy }: TileMenuProps) {
   return (
     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto">
       <div className="bg-black/70 backdrop-blur-sm rounded-2xl px-6 py-4 flex flex-col items-center gap-3 min-w-64">
-
         <div className="flex items-center gap-2">
           <span className="text-[#a0a0b0] text-sm">
             Tile ({selectedTile.x}, {selectedTile.z})
@@ -82,24 +65,15 @@ export default function TileMenu({ energy }: TileMenuProps) {
 
         {currentActions.length > 0 ? (
           <div className="flex gap-2 flex-wrap justify-center">
-            {currentActions.map((action) => {
-              const canAfford = energy >= action.cost
-              return (
-                <button
-                  key={action.label}
-                  onClick={action.action}
-                  disabled={!canAfford}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    canAfford
-                      ? 'bg-[#2d6a4f] hover:bg-[#3a8a65] text-white'
-                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  {action.label}
-                  <span className="ml-2 text-xs opacity-70">⚡{action.cost}</span>
-                </button>
-              )
-            })}
+            {currentActions.map((action) => (
+              <button
+                key={action.label}
+                onClick={action.action}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#2d6a4f] hover:bg-[#3a8a65] text-white transition-all"
+              >
+                {action.label}
+              </button>
+            ))}
           </div>
         ) : (
           <p className="text-[#a0a0b0] text-sm">Nenhuma ação disponível</p>

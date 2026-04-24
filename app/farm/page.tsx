@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getGitHubData } from '@/lib/github'
 import FarmWrapper from '@/components/farm/FarmWrapper'
 import TileMenu from '@/components/ui/TileMenu'
+import FarmInitializer from '@/components/farm/FarmInitializer'
 
 function calculateGridSize(totalRepos: number): number {
   if (totalRepos <= 2) return 10
@@ -90,7 +91,10 @@ export default async function FarmPage() {
 
   return (
     <main className="w-screen h-screen bg-[#1a1a2e] relative overflow-hidden">
-
+      <FarmInitializer
+        balance={farm?.balance ?? 0}
+        tiles={[]}
+      />
       {/* Grid 3D */}
       <div className="absolute inset-0">
         <FarmWrapper
@@ -124,7 +128,7 @@ export default async function FarmPage() {
       </div>
       {/* Menu de tile */}
       <div className="absolute inset-0 pointer-events-none">
-        <TileMenu energy={stats?.dailyEnergy ?? 0} />
+        <TileMenu />
       </div>
     </main>
   )
