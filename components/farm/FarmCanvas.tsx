@@ -1,8 +1,9 @@
 'use client'
 
-import { Canvas } from '@react-three/fiber'
+import { Canvas, ThreeEvent } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useFarmStore, TileType } from '@/store/farmStore'
 
 const BIOME_COLORS: Record<string, { ground: string; accent: string }> = {
   JavaScript: { ground: '#4a7c3f', accent: '#2d5a27' },
@@ -17,6 +18,14 @@ const BIOME_COLORS: Record<string, { ground: string; accent: string }> = {
   default:    { ground: '#5a7a4a', accent: '#3f5a32' },
 }
 
+const TILE_TYPE_COLORS: Record<TileType, string> = {
+  EMPTY:    '',
+  PREPARED: '#c4a35a',
+  PLANTED:  '#2d8a3e',
+  BUILDING: '#8a8a8a',
+  WATER:    '#3a7abf',
+}
+
 function getBiomeColor(languages: Record<string, number>) {
   const dominant = Object.entries(languages).sort((a, b) => b[1] - a[1])[0]
   if (!dominant) return BIOME_COLORS.default
@@ -26,18 +35,35 @@ function getBiomeColor(languages: Record<string, number>) {
 interface TileProps {
   position: [number, number, number]
   color: string
-  onClick: () => void
+  isSelected: boolean
+  tileType: TileType
+  onClick: (e: ThreeEvent<MouseEvent>) => void
 }
 
-function Tile({ position, color, onClick }: TileProps) {
+function Tile({ position, color, isSelected, tileType, onClick }: TileProps) {
+  const [hovered, setHovered] = useState(false)
+
+  const displayColor = tileType !== 'EMPTY'
+    ? TILE_TYPE_COLORS[tileType]
+    : isSelected
+      ? '#f0c040'
+      : hovered
+        ? '#ffffff'
+        : color
+
+  const height = tileType === 'PREPARED' ? 0.22 : 0.18
+
   return (
-    <group position={position} onClick={onClick}>
-      {/* Base do tile */}
-      <mesh position={[0, 0, 0]} receiveShadow castShadow>
-        <boxGeometry args={[0.92, 0.18, 0.92]} />
-        <meshLambertMaterial color={color} />
+    <group
+      position={position}
+      onClick={onClick}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true) }}
+      onPointerOut={() => setHovered(false)}
+    >
+      <mesh position={[0, isSelected ? 0.06 : 0, 0]} receiveShadow castShadow>
+        <boxGeometry args={[0.92, height, 0.92]} />
+        <meshLambertMaterial color={displayColor} />
       </mesh>
-      {/* Borda do tile */}
       <mesh position={[0, -0.1, 0]}>
         <boxGeometry args={[0.94, 0.02, 0.94]} />
         <meshLambertMaterial color="#1a1a1a" />
@@ -54,12 +80,12 @@ interface FarmCanvasProps {
 
 export default function FarmCanvas({ gridSizeX, gridSizeY, biome }: FarmCanvasProps) {
   const colors = getBiomeColor(biome)
+  const { selectedTile, selectTile, tiles } = useFarmStore()
 
-  const tiles = useMemo(() => {
+  const tileList = useMemo(() => {
     const result = []
     for (let x = 0; x < gridSizeX; x++) {
       for (let z = 0; z < gridSizeY; z++) {
-        // Variação sutil de cor para dar textura ao terreno
         const isAccent = (x + z) % 7 === 0
         result.push({ x, z, color: isAccent ? colors.accent : colors.ground })
       }
@@ -80,31 +106,30 @@ export default function FarmCanvas({ gridSizeX, gridSizeY, biome }: FarmCanvasPr
           fov: 45,
         }}
       >
-        {/* Iluminação */}
         <ambientLight intensity={0.7} />
-        <directionalLight
-          position={[15, 25, 15]}
-          intensity={1.0}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-        />
-        <directionalLight
-          position={[-10, 10, -10]}
-          intensity={0.3}
-          color="#b0c4ff"
-        />
+        <directionalLight position={[15, 25, 15]} intensity={1.0} castShadow shadow-mapSize={[2048, 2048]} />
+        <directionalLight position={[-10, 10, -10]} intensity={0.3} color="#b0c4ff" />
 
-        {/* Tiles */}
-        {tiles.map(({ x, z, color }) => (
-          <Tile
-            key={`${x}-${z}`}
-            position={[x - offsetX, 0, z - offsetZ]}
-            color={color}
-            onClick={() => console.log(`Tile clicado: ${x}, ${z}`)}
-          />
-        ))}
+        {tileList.map(({ x, z, color }) => {
+          const key = `${x}-${z}`
+          const tileData = tiles[key]
+          const isSelected = selectedTile?.x === x && selectedTile?.z === z
 
-        {/* Chão base */}
+          return (
+            <Tile
+              key={key}
+              position={[x - offsetX, 0, z - offsetZ]}
+              color={color}
+              isSelected={isSelected}
+              tileType={tileData?.type ?? 'EMPTY'}
+              onClick={(e) => {
+                e.stopPropagation()
+                selectTile(x, z)
+              }}
+            />
+          )
+        })}
+
         <mesh position={[0, -0.15, 0]} receiveShadow>
           <boxGeometry args={[gridSizeX + 2, 0.1, gridSizeY + 2]} />
           <meshLambertMaterial color="#111111" />

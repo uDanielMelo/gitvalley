@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getGitHubData } from '@/lib/github'
 import FarmWrapper from '@/components/farm/FarmWrapper'
+import TileMenu from '@/components/ui/TileMenu'
 
 function calculateGridSize(totalRepos: number): number {
   if (totalRepos <= 2) return 10
@@ -121,7 +122,10 @@ export default async function FarmPage() {
           </div>
         </div>
       </div>
-
+      {/* Menu de tile */}
+      <div className="absolute inset-0 pointer-events-none">
+        <TileMenu energy={stats?.dailyEnergy ?? 0} />
+      </div>
     </main>
   )
 }
