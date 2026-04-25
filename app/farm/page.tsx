@@ -86,14 +86,17 @@ export default async function FarmPage() {
     })
   }
 
-  const farm = await prisma.farm.findUnique({ where: { userId: user.id } })
+  const farm = await prisma.farm.findUnique({
+    where: { userId: user.id },
+    include: { tiles: true },
+  })
   const stats = await prisma.gitStats.findUnique({ where: { userId: user.id } })
 
   return (
     <main className="w-screen h-screen bg-[#1a1a2e] relative overflow-hidden">
       <FarmInitializer
         balance={farm?.balance ?? 0}
-        tiles={[]}
+        tiles={farm?.tiles ?? []}
       />
       {/* Grid 3D */}
       <div className="absolute inset-0">

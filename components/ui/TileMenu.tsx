@@ -2,6 +2,14 @@
 
 import { useFarmStore } from '@/store/farmStore'
 
+async function saveTile(posX: number, posY: number, type: string, crop?: string) {
+  await fetch('/api/farm/tiles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ posX, posY, type, crop }),
+  })
+}
+
 export default function TileMenu() {
   const { selectedTile, clearSelection, setTileType, tiles } = useFarmStore()
 
@@ -14,15 +22,17 @@ export default function TileMenu() {
     EMPTY: [
       {
         label: '⛏ Preparar Solo',
-        action: () => {
+        action: async () => {
           setTileType(selectedTile.x, selectedTile.z, 'PREPARED')
+          await saveTile(selectedTile.x, selectedTile.z, 'PREPARED')
           clearSelection()
         },
       },
       {
         label: '💧 Criar Lago',
-        action: () => {
+        action: async () => {
           setTileType(selectedTile.x, selectedTile.z, 'WATER')
+          await saveTile(selectedTile.x, selectedTile.z, 'WATER')
           clearSelection()
         },
       },
@@ -30,8 +40,9 @@ export default function TileMenu() {
     PREPARED: [
       {
         label: '🌱 Plantar Trigo',
-        action: () => {
+        action: async () => {
           setTileType(selectedTile.x, selectedTile.z, 'PLANTED')
+          await saveTile(selectedTile.x, selectedTile.z, 'PLANTED', 'TRIGO')
           clearSelection()
         },
       },
@@ -39,8 +50,9 @@ export default function TileMenu() {
     PLANTED: [
       {
         label: '🌾 Colher',
-        action: () => {
+        action: async () => {
           setTileType(selectedTile.x, selectedTile.z, 'EMPTY')
+          await saveTile(selectedTile.x, selectedTile.z, 'EMPTY')
           clearSelection()
         },
       },

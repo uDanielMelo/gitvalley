@@ -15,12 +15,13 @@ interface FarmInitializerProps {
 export default function FarmInitializer({ balance, tiles }: FarmInitializerProps) {
   const { setTileType } = useFarmStore()
 
-  useEffect(() => {
-    useFarmStore.setState({ balance })
-    tiles.forEach((tile) => {
-      setTileType(tile.posX, tile.posY, tile.type as any)
-    })
-  }, [balance, tiles, setTileType])
+useEffect(() => {
+  console.log('Tiles recebidos:', tiles)
+  useFarmStore.setState({ balance })
+  tiles.forEach((tile) => {
+    setTileType(tile.posX, tile.posY, tile.type as any)
+  })
+}, [balance, tiles, setTileType])
 
   return null
 }

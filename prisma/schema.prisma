@@ -66,6 +66,9 @@ model Tile {
   posX      Int
   posY      Int
   type      String   @default("EMPTY")
+  crop      String?
+  plantedAt DateTime?
+  readyAt   DateTime?
   data      Json     @default("{}")
 
   updatedAt DateTime @updatedAt
