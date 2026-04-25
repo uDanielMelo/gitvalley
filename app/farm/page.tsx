@@ -34,10 +34,11 @@ export default async function FarmPage() {
   const needsSync = !user.gitStats || (() => {
     const lastSync = new Date(user.gitStats.lastSyncAt)
     const hoursSince = (Date.now() - lastSync.getTime()) / 1000 / 60 / 60
-    return hoursSince >= 24
+    return hoursSince >= 168
   })()
 
   if (needsSync) {
+    console.log('=== NEEDS SYNC, criando fazenda ===')
     const githubData = await getGitHubData(session.accessToken)
     const gridSize = calculateGridSize(githubData.totalRepos)
 
@@ -70,6 +71,10 @@ export default async function FarmPage() {
       },
     })
 
+    const existingFarm = await prisma.farm.findUnique({
+      where: { userId: user.id },
+    })
+
     await prisma.farm.upsert({
       where: { userId: user.id },
       update: {
@@ -82,8 +87,37 @@ export default async function FarmPage() {
         gridSizeX: gridSize,
         gridSizeY: gridSize,
         biome: githubData.languages,
+        balance: 5000,
+        houseX: Math.floor(gridSize / 2),
+        houseY: Math.floor(gridSize / 2),
       },
     })
+
+    if (!existingFarm) {
+      const newFarm = await prisma.farm.findUnique({
+        where: { userId: user.id },
+      })
+      if (newFarm) {
+        await prisma.peon.createMany({
+          data: [
+            { farmId: newFarm.id, name: 'Peão 1' },
+            { farmId: newFarm.id, name: 'Peão 2' },
+            { farmId: newFarm.id, name: 'Peão 3' },
+          ],
+        })
+
+        const cx = Math.floor(gridSize / 2)
+        const cy = Math.floor(gridSize / 2)
+        await prisma.tile.createMany({
+          data: [
+            { farmId: newFarm.id, posX: cx, posY: cy, type: 'BUILDING', data: { building: 'HOUSE' } },
+            { farmId: newFarm.id, posX: cx + 1, posY: cy, type: 'BUILDING', data: { building: 'HOUSE' } },
+            { farmId: newFarm.id, posX: cx, posY: cy + 1, type: 'BUILDING', data: { building: 'HOUSE' } },
+            { farmId: newFarm.id, posX: cx + 1, posY: cy + 1, type: 'BUILDING', data: { building: 'HOUSE' } },
+          ],
+        })
+      }
+    }
   }
 
   const farm = await prisma.farm.findUnique({
@@ -98,16 +132,16 @@ export default async function FarmPage() {
         balance={farm?.balance ?? 0}
         tiles={farm?.tiles ?? []}
       />
-      {/* Grid 3D */}
       <div className="absolute inset-0">
         <FarmWrapper
           gridSizeX={farm?.gridSizeX ?? 10}
           gridSizeY={farm?.gridSizeY ?? 10}
           biome={(farm?.biome as Record<string, number>) ?? {}}
+          houseX={farm?.houseX ?? 0}
+          houseY={farm?.houseY ?? 0}
         />
       </div>
 
-      {/* HUD */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
         <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2">
           <p className="text-[#e8c97a] font-bold text-lg">{user.username}</p>
@@ -115,10 +149,6 @@ export default async function FarmPage() {
         </div>
 
         <div className="flex gap-3">
-          <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
-            <p className="text-[#a0a0b0] text-xs">Energia</p>
-            <p className="text-[#e8c97a] font-bold">{stats?.dailyEnergy ?? 0}</p>
-          </div>
           <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
             <p className="text-[#a0a0b0] text-xs">Streak</p>
             <p className="text-[#e8c97a] font-bold">{stats?.streak ?? 0} dias</p>
@@ -129,7 +159,7 @@ export default async function FarmPage() {
           </div>
         </div>
       </div>
-      {/* Menu de tile */}
+
       <div className="absolute inset-0 pointer-events-none">
         <TileMenu />
       </div>

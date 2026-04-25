@@ -37,10 +37,11 @@ interface TileProps {
   color: string
   isSelected: boolean
   tileType: TileType
+  isHouse: boolean
   onClick: (e: ThreeEvent<MouseEvent>) => void
 }
 
-function Tile({ position, color, isSelected, tileType, onClick }: TileProps) {
+function Tile({ position, color, isSelected, tileType, isHouse, onClick }: TileProps) {
   const [hovered, setHovered] = useState(false)
 
   const displayColor = tileType !== 'EMPTY'
@@ -68,6 +69,23 @@ function Tile({ position, color, isSelected, tileType, onClick }: TileProps) {
         <boxGeometry args={[0.94, 0.02, 0.94]} />
         <meshLambertMaterial color="#1a1a1a" />
       </mesh>
+
+      {isHouse && (
+        <group position={[0.5, 0.18, 0.5]}>
+          <mesh position={[0, 0.3, 0]} castShadow>
+            <boxGeometry args={[1.8, 0.6, 1.8]} />
+            <meshLambertMaterial color="#e8d5a3" />
+          </mesh>
+          <mesh position={[0, 0.7, 0]} castShadow>
+            <coneGeometry args={[1.4, 0.6, 4]} />
+            <meshLambertMaterial color="#c0392b" />
+          </mesh>
+          <mesh position={[0, 0.1, 0.91]}>
+            <boxGeometry args={[0.3, 0.4, 0.05]} />
+            <meshLambertMaterial color="#8B4513" />
+          </mesh>
+        </group>
+      )}
     </group>
   )
 }
@@ -76,9 +94,11 @@ interface FarmCanvasProps {
   gridSizeX: number
   gridSizeY: number
   biome: Record<string, number>
+  houseX: number
+  houseY: number
 }
 
-export default function FarmCanvas({ gridSizeX, gridSizeY, biome }: FarmCanvasProps) {
+export default function FarmCanvas({ gridSizeX, gridSizeY, biome, houseX, houseY }: FarmCanvasProps) {
   const colors = getBiomeColor(biome)
   const { selectedTile, selectTile, tiles } = useFarmStore()
 
@@ -114,6 +134,7 @@ export default function FarmCanvas({ gridSizeX, gridSizeY, biome }: FarmCanvasPr
           const key = `${x}-${z}`
           const tileData = tiles[key]
           const isSelected = selectedTile?.x === x && selectedTile?.z === z
+          const isHouse = x === houseX && z === houseY
 
           return (
             <Tile
@@ -122,6 +143,7 @@ export default function FarmCanvas({ gridSizeX, gridSizeY, biome }: FarmCanvasPr
               color={color}
               isSelected={isSelected}
               tileType={tileData?.type ?? 'EMPTY'}
+              isHouse={isHouse}
               onClick={(e) => {
                 e.stopPropagation()
                 selectTile(x, z)
